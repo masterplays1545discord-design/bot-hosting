@@ -68,6 +68,10 @@ const commands = [
             }
         ]
     },
+    {
+        name: 'memberstats',
+        description: 'Shows server member stats (joined, left, total)'
+    }
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);

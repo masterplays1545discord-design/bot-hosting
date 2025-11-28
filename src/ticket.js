@@ -24,14 +24,8 @@ const STAFF_ROLE_ID = "1414242670058148023";
 const LOG_CHANNEL_ID = "1414249704426045531";
 
 const CATEGORY_SUPPORT = "1439090052394385559";
-const CATEGORY_PURCHASE = "1439090078214389902";
+const CATEGORY_APPLICATION = "1439090078214389902";
 const CATEGORY_PARTNERSHIP = "1417489234918637668";
-
-const roles = [
-    { id: '1414189877850800179', label: '📢 Announcement' },
-    { id: '1414190108738977933', label: '🎁 Giveaway' },
-    { id: '1414189488841691207', label: '🤝 Partnership' },
-];
 
 let ticketCount = 0;
 
@@ -39,66 +33,50 @@ let ticketCount = 0;
 client.on('ready', async () => {
     console.log(`Logged in as ${client.user.tag}`);
 
-    const welcomeChannel = client.channels.cache.get('1361985446132842596');
-    if (!welcomeChannel || !welcomeChannel.isTextBased()) return;
-
-    // Welcome embeds
-    const embed1 = new EmbedBuilder()
-        .setTitle('Welcome to Hesi Productions!')
-        .setDescription('We are an innovative tech company with products for all Roblox needs!')
-        .setColor(0xe91e63);
-
-    const embed2 = new EmbedBuilder()
-        .setTitle('Getting Started')
-        .addFields(
-            { name: 'Rules', value: 'Read them in ⁠<#1359800093867376670>' },
-            { name: 'Purchases', value: 'Buy products at ⁠<#1361987847523143822>' },
-            { name: 'Updates', value: 'Latest updates in ⁠<#1358418972822868078>' },
-            { name: 'Community', value: 'Chat in ⁠<#1437418428364230668>' },
-            { name: 'Support', value: 'Open support tickets in ⁠<#1361990250108420177>' }
-        )
-        .setColor(0xe91e63);
-
-    const embed3 = new EmbedBuilder()
-        .setTitle('Next Steps')
-        .setDescription('Explore products, give suggestions, or apply for a job!')
-        .setFooter({ text: 'Thank you from Hesi Productions Staff!' })
-        .setColor(0xe91e63);
-
-    await welcomeChannel.send({ embeds: [embed1, embed2, embed3] });
-
-    // Role buttons
-    const roleRow = new ActionRowBuilder().addComponents(
-        ...roles.map(r =>
-            new ButtonBuilder()
-                .setCustomId(r.id)
-                .setLabel(r.label)
-                .setStyle(ButtonStyle.Primary)
-        )
-    );
-    await welcomeChannel.send({
-        embeds: [new EmbedBuilder().setTitle('Claim Your Roles').setDescription('Click to add/remove roles.').setColor(0xe91e63)],
-        components: [roleRow]
-    });
-
     // Ticket panel
     const ticketPanel = client.channels.cache.get("1361990250108420177");
     if (!ticketPanel) return;
 
+    // const attachment = new AttachmentBuilder('./Hesi Productions Logo.png', { name: 'Hesi Productions Logo.png' });
+
     const ticketEmbed = new EmbedBuilder()
-        .setTitle("🎫 Support Tickets")
-        .setDescription("Choose a ticket type below.")
-        .setColor("#2b2d31");
+        .setTitle("🎫 Contact Us")
+        .setDescription(
+            "Need support? Press one of the buttons below that match your inquiry the best — whether you need help, want to make a purchase, or are interested in a partnership. Our team is ready to assist you quickly and efficiently.\n\n" +
+            "**🛠️ Support**\nOpen a ticket for troubleshooting, product guidance, or general questions.\n\n" +
+            "**📄 Applications**\nOpen this ticket to apply for jobs, roles, or collaborations within Hesi Productions.\n\n" +
+            "**🤝 Partnerships**\nOpen a ticket to collaborate with us for mutual growth and promotion."
+        )
+        // .setImage("attachment://Hesi Productions Logo.png")
+        .setColor(0xe91e63)
+        .setFooter({ text: "Hesi Productions Support" })
+        .setTimestamp();
 
     const ticketRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("ticket_support").setLabel("Support").setEmoji("🛠️").setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId("ticket_purchase").setLabel("Purchase").setEmoji("💳").setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId("ticket_partnership").setLabel("Partnership").setEmoji("🤝").setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder()
+            .setCustomId("ticket_support")
+            .setLabel("Support")
+            .setEmoji("🛠️")
+            .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+            .setCustomId("ticket_application")
+            .setLabel("Applications")
+            .setEmoji("📄")
+            .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+            .setCustomId("ticket_partnership")
+            .setLabel("Partnerships")
+            .setEmoji("🤝")
+            .setStyle(ButtonStyle.Danger)
     );
 
-    await ticketPanel.send({ embeds: [ticketEmbed], components: [ticketRow] });
+    await ticketPanel.send({ 
+        embeds: [ticketEmbed], 
+        // files: [attachment], // directly here
+        components: [ticketRow] 
+    });
 
-    console.log("Bot is ready and ticket panel sent!");
+    console.log("Ticket panel sent!");
 });
 
 // ================= INTERACTIONS =================
@@ -107,24 +85,10 @@ client.on("interactionCreate", async interaction => {
 
     const logChannel = interaction.guild.channels.cache.get(LOG_CHANNEL_ID);
 
-    // ===== ROLE BUTTONS =====
-    if (roles.some(r => r.id === interaction.customId)) {
-        const roleId = interaction.customId;
-        const member = interaction.member;
-
-        if (member.roles.cache.has(roleId)) {
-            await member.roles.remove(roleId);
-            return interaction.reply({ content: `Removed <@&${roleId}>`, ephemeral: true });
-        } else {
-            await member.roles.add(roleId);
-            return interaction.reply({ content: `Added <@&${roleId}>`, ephemeral: true });
-        }
-    }
-
     // ===== CREATE TICKET =====
     const types = {
         "ticket_support": { name: "Support", emoji: "🛠️", category: CATEGORY_SUPPORT },
-        "ticket_purchase": { name: "Purchase", emoji: "💳", category: CATEGORY_PURCHASE },
+        "ticket_application": { name: "Application", emoji: "📄", category: CATEGORY_APPLICATION },
         "ticket_partnership": { name: "Partnership", emoji: "🤝", category: CATEGORY_PARTNERSHIP }
     };
 
@@ -251,7 +215,6 @@ client.on("interactionCreate", async interaction => {
             interaction.channel.delete().catch(() => {});
         }, 500);
     }
-
 });
 
 client.login(process.env.TOKEN);
